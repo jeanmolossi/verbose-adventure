@@ -1,0 +1,2 @@
+# verbose-adventure
+Headless CRM
