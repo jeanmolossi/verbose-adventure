@@ -1,0 +1,16 @@
+# syntax=docker/dockerfile:1.4
+FROM golang:1.24-alpine3.20
+
+WORKDIR /app
+
+# Instala reflex para hot reload
+RUN go install github.com/cespare/reflex@latest
+
+COPY go.mod go.sum ./
+RUN go mod download
+
+COPY . .
+
+EXPOSE 8080
+
+CMD ["reflex", "-c", "reflex.conf"]
