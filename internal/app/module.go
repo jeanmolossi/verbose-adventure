@@ -16,6 +16,7 @@ import (
 	"github.com/jeanmolossi/verbose-adventure/internal/http/handlers"
 	"github.com/jeanmolossi/verbose-adventure/internal/http/middleware"
 	"github.com/jeanmolossi/verbose-adventure/internal/logger"
+	"github.com/jeanmolossi/verbose-adventure/internal/repo"
 )
 
 // Register all providers and invokes in one place:
@@ -28,9 +29,12 @@ func New() *fx.App {
 
 			db.NewMySQL, // *sql.DB (MySQL)
 
+			repo.NewIdentityProviderRepository, // IdentiityProviderRepository
+
 			auth.LoadIdentityProviders, // LoadIdentityProviders interface
 			echo.New,                   // *echo.Echo
-			handlers.NewAuthHandler,
+			handlers.NewAuthHandler,    // *handlers.AuthHandler
+			handlers.NewIDPHandler,     // *handlers.IDPHandler
 
 			fx.Annotate(
 				middleware.ZapLogger, // func(*zap.Logger) echo.MiddlewareFunc

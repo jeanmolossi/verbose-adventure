@@ -10,18 +10,41 @@ import (
 
 func registerRoutes() any {
 	return fx.Annotate(
-		func(e *echo.Echo, hh *handlers.AuthHandler, jwtMw echo.MiddlewareFunc, mysqlDB *sql.DB) {
-			api := e.Group("/api")
-
+		func(
+			e *echo.Echo,
+			hh *handlers.AuthHandler,
+			jwtMw echo.MiddlewareFunc,
+			idph *handlers.IDPHandler,
+			mysqlDB *sql.DB,
+		) {
+			// Health
 			e.GET("/healthz", handlers.Healthz(mysqlDB))
 
+			// Auth SSO
 			e.GET("/:tenantID/:idpType/login", hh.Login)
 			e.GET("/:tenantID/:idpType/callback", hh.Callback)
 
-			v1 := api.Group("/v1", jwtMw)
+			// Admin: Identity providers
+			admin := e.Group("/admin/tenants/:tenantID/idps", jwtMw)
+			{
+				admin.GET(":id", idph.Get)
+				admin.GET("", idph.List)
+				admin.POST("", idph.Create)
+				admin.PUT(":id", idph.Update)
+				admin.DELETE(":id", idph.Delete)
+			}
 
+			// Protected API
+			api := e.Group("/api")
+			v1 := api.Group("/v1", jwtMw)
 			v1.GET("/me", handlers.Me)
 		},
-		fx.ParamTags(``, ``, `name:"jwtMw"`, ``),
+		fx.ParamTags(
+			``,             // echo
+			``,             // AuthHandler
+			`name:"jwtMw"`, // jwt Middleware
+			``,             // IDPHandler
+			``,             // mysqlDB
+		),
 	)
 }
