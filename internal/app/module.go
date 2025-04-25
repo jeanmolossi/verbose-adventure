@@ -2,7 +2,6 @@ package app
 
 import (
 	"context"
-	"database/sql"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -11,8 +10,10 @@ import (
 	"go.uber.org/fx"
 	"go.uber.org/zap"
 
+	"github.com/jeanmolossi/verbose-adventure/internal/auth"
 	"github.com/jeanmolossi/verbose-adventure/internal/config"
 	"github.com/jeanmolossi/verbose-adventure/internal/db"
+	"github.com/jeanmolossi/verbose-adventure/internal/http/handlers"
 	"github.com/jeanmolossi/verbose-adventure/internal/http/middleware"
 	"github.com/jeanmolossi/verbose-adventure/internal/logger"
 )
@@ -22,52 +23,51 @@ func New() *fx.App {
 	return fx.New(
 		// 1) Builds
 		fx.Provide(
-			config.New,           // *config.Config
-			logger.NewZap,        // *zap.Logger
-			db.NewMySQL,          // *sql.DB (MySQL) db.NewPostgres,       // *sql.DB (Postgres)
-			echo.New,             // *echo.Echo
-			middleware.ZapLogger, // func(*zap.Logger) echo.MiddlewareFunc
-			// handlers.NewUserHandler, // exemplo de handler
-			// … outros handlers/repos/providers
+			config.New,    // *config.Config
+			logger.NewZap, // *zap.Logger
+
+			db.NewMySQL, // *sql.DB (MySQL)
+
+			auth.LoadIdentityProviders, // LoadIdentityProviders interface
+			echo.New,                   // *echo.Echo
+			handlers.NewAuthHandler,
+
+			fx.Annotate(
+				middleware.ZapLogger, // func(*zap.Logger) echo.MiddlewareFunc
+				fx.ResultTags(`name:"zapMw"`),
+			),
+
+			func(cfg *config.Config) middleware.JWTConfig {
+				return middleware.JWTConfig{JWTSecret: cfg.JWTSecret}
+			},
+
+			fx.Annotate(
+				func(cfg *config.Config) echo.MiddlewareFunc {
+					return middleware.NewJWTMiddleware(middleware.JWTConfig{
+						JWTSecret: cfg.JWTSecret,
+					})
+				}, fx.ResultTags(`name:"jwtMw"`),
+			),
 		),
 		// 2) Registrations
 		fx.Invoke(
-			registerDBHealth,
 			db.RunMigrations,
-			registerMiddlewares,
-			registerRoutes,
+			registerMiddlewares(),
+			registerRoutes(),
 			startServer,
 		),
 	)
 }
 
-func registerDBHealth(e *echo.Echo, mysqlDB *sql.DB) {
-	e.GET("/healthz", func(c echo.Context) error {
-		if err := mysqlDB.Ping(); err != nil {
-			return c.JSON(500, echo.Map{
-				"error": "mysql down",
-			})
-		}
-
-		return c.JSON(200, echo.Map{
-			"mysql": map[string]any{
-				"status": "up",
-			},
-		})
-	})
-}
-
-func registerMiddlewares(e *echo.Echo, zl echo.MiddlewareFunc) {
-	e.HideBanner = true
-	e.Use(emiddleware.Recover())
-	e.Use(zl)
-}
-
-func registerRoutes(e *echo.Echo) {
-	// grp := e.Group("/users")
-	// grp.GET("", uh.List)
-	// grp.POST("", uh.Create)
-	// … outras rotas
+func registerMiddlewares() any {
+	return fx.Annotate(
+		func(e *echo.Echo, zl echo.MiddlewareFunc) {
+			e.HideBanner = true
+			e.Use(emiddleware.Recover())
+			e.Use(zl)
+		},
+		fx.ParamTags(``, `name:"zapMw"`),
+	)
 }
 
 func startServer(lc fx.Lifecycle, e *echo.Echo, log *zap.Logger) {

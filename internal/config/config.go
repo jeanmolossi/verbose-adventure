@@ -65,6 +65,10 @@ type Config struct {
 	MySQLConfig MySQLConfig
 	PGConfig    PGConfig
 	LogLevel    string `envconfig:"LOG_LEVEL" default:"info"`
+
+	BaseURL       string `envconfig:"BASE_URL" default:"localhost:8080"`
+	EncryptionKey string `envconfig:"ENCRYPTION_KEY" required:"true"`
+	JWTSecret     string `envconfig:"JWT_SECRET" required:"true"`
 }
 
 func New() (*Config, error) {
