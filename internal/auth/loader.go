@@ -109,7 +109,7 @@ func decryptSecret(ciphertext []byte, keyBase64 string) (string, error) {
 
 	block, err := aes.NewCipher(key)
 	if err != nil {
-		return "", nil
+		return "", err
 	}
 
 	gcm, err := cipher.NewGCM(block)

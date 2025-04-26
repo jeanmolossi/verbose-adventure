@@ -78,7 +78,7 @@ func startServer(lc fx.Lifecycle, e *echo.Echo, log *zap.Logger) {
 	lc.Append(fx.Hook{
 		OnStart: func(ctx context.Context) error {
 			go func() {
-				if err := e.Start(":8080"); err != nil && err != http.ErrServerClosed {
+				if err := e.Start(":8081"); err != nil && err != http.ErrServerClosed {
 					log.Fatal("Echo start failed", zap.Error(err))
 				}
 			}()

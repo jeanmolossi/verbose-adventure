@@ -6,6 +6,7 @@ import (
 	"crypto/rand"
 	"database/sql"
 	"encoding/base64"
+	"fmt"
 	"io"
 	"net/http"
 	"strconv"
@@ -233,7 +234,7 @@ func parseID(c echo.Context) (int64, error) {
 func encryptSecret(plaintext []byte, keyB64 string) ([]byte, error) {
 	key, err := base64.StdEncoding.DecodeString(keyB64)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("can not decode encryption key: %w", err)
 	}
 	block, err := aes.NewCipher(key)
 	if err != nil {

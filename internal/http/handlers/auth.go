@@ -43,11 +43,6 @@ func (h *AuthHandler) getIdentityProvider(c echo.Context) (auth.IdentityProvider
 	return p, nil
 }
 
-func (h *AuthHandler) Register(e *echo.Echo) {
-	e.GET("/:tenantID/:idpType/login", h.Login)
-	e.GET("/:tenantID/:idpType/callback", h.Callback)
-}
-
 func (h *AuthHandler) Login(c echo.Context) error {
 	p, err := h.getIdentityProvider(c)
 	if err != nil {
