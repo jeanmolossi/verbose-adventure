@@ -31,12 +31,18 @@ services:
     env_file:
       - .env
     ports:
-      - "8080:8080"
+      - "8081:8081"
     depends_on:
       - mysql
       - postgres
     volumes:
       - .:/app
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    entrypoint: >
+      sh -c "
+        socat TCP-LISTEN:8080,fork,bind=127.0.0.1 TCP:host.docker.internal:8080 & reflex -c reflex.conf
+      "
 
 volumes:
   mysql_data:

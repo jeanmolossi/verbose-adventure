@@ -9,8 +9,10 @@ RUN go install github.com/cespare/reflex@latest
 COPY go.mod go.sum ./
 RUN go mod download
 
+RUN apk add socat
+
 COPY . .
 
-EXPOSE 8080
+EXPOSE 8081
 
 CMD ["reflex", "-c", "reflex.conf"]

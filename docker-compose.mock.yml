@@ -1,0 +1,15 @@
+version: "3.8"
+
+services:
+  keycloak:
+    image: quay.io/keycloak/keycloak:latest
+    environment:
+      # credenciais iniciais de admin
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: secret
+    command: >
+      start-dev --import-realm
+    network_mode: host
+    restart: unless-stopped
+    volumes:
+      - .docker/idp/:/opt/keycloak/data/import
