@@ -1,0 +1,10 @@
+#!/bin/bash
+
+mysql -uroot -p"${MYSQL_ROOT_PASSWORD}" <<EOSQL
+CREATE USER IF NOT EXISTS 'replicator'@'%'
+IDENTIFIED BY '${MYSQL_ROOT_PASSWORD}';
+
+GRANT REPLICATION SLAVE ON *.* TO 'replicator'@'%';
+
+FLUSH PRIVILEGES;
+EOSQL
