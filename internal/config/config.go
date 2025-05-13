@@ -69,6 +69,9 @@ type Config struct {
 	BaseURL       string `envconfig:"BASE_URL" default:"localhost:8080"`
 	EncryptionKey string `envconfig:"ENCRYPTION_KEY" required:"true"`
 	JWTSecret     string `envconfig:"JWT_SECRET" required:"true"`
+
+	SAMLKeyPath  string `envconfig:"SAML_KEY_PATH" required:"true"`
+	SAMLCertPath string `envconfig:"SAML_CERT_PATH" required:"true"`
 }
 
 func New() (*Config, error) {
