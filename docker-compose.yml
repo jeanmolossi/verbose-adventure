@@ -73,6 +73,7 @@ services:
   #     - "pg_data:/var/lib/postgresql/data"
 
   api:
+    container_name: api
     build:
       context: .
       dockerfile: Dockerfile.dev
