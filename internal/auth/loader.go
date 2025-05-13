@@ -7,6 +7,7 @@ import (
 	"database/sql"
 	"encoding/base64"
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -89,7 +90,12 @@ func LoadIdentityProviders(cfg *config.Config, wrDB *sql.DB) ([]IdentityProvider
 
 			providers = append(providers, p)
 		case "saml":
-			// TODO: implement newSAMLProvider
+			p, err := newSAMLProvider(ctx, rec, cfg)
+			if err != nil {
+				return nil, fmt.Errorf("can not set saml provider: %w", err)
+			}
+
+			providers = append(providers, p)
 		default:
 			// ignore
 		}
