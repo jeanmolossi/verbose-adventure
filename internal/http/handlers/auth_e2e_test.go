@@ -35,7 +35,11 @@ func (f *fakeOIDC) Callback(ctx context.Context, req *http.Request) (*auth.AuthR
 func setupServer(t *testing.T, providers []auth.IdentityProvider, cfg *config.Config) *echo.Echo {
 	e := echo.New()
 	h := handlers.NewAuthHandler(providers, cfg)
-	h.Register(e)
+
+	// Auth SSO
+	e.GET("/:tenantID/:idpType/login", h.Login)
+	e.GET("/:tenantID/:idpType/callback", h.Callback)
+
 	return e
 }
 
