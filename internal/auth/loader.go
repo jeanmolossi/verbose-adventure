@@ -12,6 +12,7 @@ import (
 
 	"github.com/coreos/go-oidc"
 	"github.com/jeanmolossi/verbose-adventure/internal/config"
+	"github.com/jeanmolossi/verbose-adventure/internal/db"
 	"golang.org/x/oauth2"
 )
 
@@ -39,7 +40,12 @@ type idpRecord struct {
 	Enabled         bool
 }
 
-func LoadIdentityProviders(cfg *config.Config, db *sql.DB) ([]IdentityProvider, error) {
+func LoadIdentityProviders(cfg *config.Config, wrDB *sql.DB) ([]IdentityProvider, error) {
+	db.FirstMigration(db.RunMigrationsParams{
+		WriteDB: wrDB,
+		Cfg:     cfg,
+	})
+
 	ctx := context.Background()
 
 	query := `
@@ -48,7 +54,7 @@ func LoadIdentityProviders(cfg *config.Config, db *sql.DB) ([]IdentityProvider, 
     WHERE enabled = ?
     `
 
-	rows, err := db.QueryContext(ctx, query, 1)
+	rows, err := wrDB.QueryContext(ctx, query, 1)
 	if err != nil {
 		return nil, err
 	}

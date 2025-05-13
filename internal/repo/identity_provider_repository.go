@@ -4,6 +4,8 @@ import (
 	"context"
 	"database/sql"
 	"time"
+
+	"go.uber.org/fx"
 )
 
 // IdentityProviderRecord representa a linha da tabela identity_providers.
@@ -35,12 +37,20 @@ type IdentityProviderRepository interface {
 
 // identityProviderRepo é a implementação concreta
 type identityProviderRepo struct {
-	db *sql.DB
+	wr *sql.DB
+	ro *sql.DB
+}
+
+type IdentityProviderParams struct {
+	fx.In
+
+	WriteDB *sql.DB `name:"mysqlMaster"`
+	ReadDB  *sql.DB `name:"mysqlReplica"`
 }
 
 // NewIdentityProviderRepository instancia um IdentityProviderRepository
-func NewIdentityProviderRepository(db *sql.DB) IdentityProviderRepository {
-	return &identityProviderRepo{db: db}
+func NewIdentityProviderRepository(p IdentityProviderParams) IdentityProviderRepository {
+	return &identityProviderRepo{wr: p.WriteDB, ro: p.ReadDB}
 }
 
 func (r *identityProviderRepo) ListByTenant(ctx context.Context, tenantID int64) ([]*IdentityProviderRecord, error) {
@@ -49,7 +59,7 @@ func (r *identityProviderRepo) ListByTenant(ctx context.Context, tenantID int64)
 	    FROM identity_providers
 	    WHERE tenant_id = ?
     `
-	rows, err := r.db.QueryContext(ctx, query, tenantID)
+	rows, err := r.ro.QueryContext(ctx, query, tenantID)
 	if err != nil {
 		return nil, err
 	}
@@ -82,7 +92,7 @@ func (r *identityProviderRepo) GetByID(ctx context.Context, id int64) (*Identity
 	    FROM identity_providers
 	    WHERE id = ?
     `
-	row := r.db.QueryRowContext(ctx, query, id)
+	row := r.ro.QueryRowContext(ctx, query, id)
 	rec := &IdentityProviderRecord{}
 	if err := row.Scan(
 		&rec.ID,
@@ -109,7 +119,7 @@ func (r *identityProviderRepo) Create(ctx context.Context, rec *IdentityProvider
 	        (tenant_id, type, metadata_url, client_id, client_secret_enc, enabled)
 	    VALUES (?, ?, ?, ?, ?, ?)
     `
-	res, err := r.db.ExecContext(ctx, query,
+	res, err := r.wr.ExecContext(ctx, query,
 		rec.TenantID,
 		rec.ProviderType,
 		rec.MetadataURL,
@@ -133,7 +143,7 @@ func (r *identityProviderRepo) Update(ctx context.Context, rec *IdentityProvider
 	    SET tenant_id = ?, type = ?, metadata_url = ?, client_id = ?, client_secret_enc = ?, enabled = ?, updated_at = CURRENT_TIMESTAMP
 	    WHERE id = ?
     `
-	_, err := r.db.ExecContext(ctx, query,
+	_, err := r.wr.ExecContext(ctx, query,
 		rec.TenantID,
 		rec.ProviderType,
 		rec.MetadataURL,
@@ -147,7 +157,7 @@ func (r *identityProviderRepo) Update(ctx context.Context, rec *IdentityProvider
 
 func (r *identityProviderRepo) Delete(ctx context.Context, id int64) error {
 	query := `DELETE FROM identity_providers WHERE id = ?`
-	res, err := r.db.ExecContext(ctx, query, id)
+	res, err := r.wr.ExecContext(ctx, query, id)
 	if err != nil {
 		return err
 	}

@@ -9,9 +9,9 @@ import (
 	_ "github.com/lib/pq"
 )
 
-// NewMySQL retorna uma conexão configurada para MySQL.
-func NewMySQL(cfg *config.Config) (*sql.DB, error) {
-	db, err := sql.Open("mysql", cfg.MySQLConfig.WriteDSN())
+// newMySQL retorna uma conexão configurada para MySQL.
+func newMySQL(dsn string) (*sql.DB, error) {
+	db, err := sql.Open("mysql", dsn)
 	if err != nil {
 		return nil, err
 	}
@@ -27,6 +27,26 @@ func NewMySQL(cfg *config.Config) (*sql.DB, error) {
 	}
 
 	return db, nil
+}
+
+// NewMySQL retorna uma conexão configurada para MySQL.
+func NewMySQL(cfg *config.Config) *sql.DB {
+	db, err := newMySQL(cfg.MySQLConfig.WriteDSN())
+	if err != nil {
+		panic(err)
+	}
+
+	return db
+}
+
+// NewMySQLRead retorna uma conexão configurada para MySQL na replica de leitura.
+func NewMySQLRead(cfg *config.Config) *sql.DB {
+	db, err := newMySQL(cfg.MySQLConfig.ReadDSN())
+	if err != nil {
+		panic(err)
+	}
+
+	return db
 }
 
 // NewPostgres retorna uma conexão configurada para PostgreSQL.

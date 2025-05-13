@@ -11,10 +11,42 @@ import (
 	"go.uber.org/fx"
 )
 
-func RunMigrations(lc fx.Lifecycle, mysqlDB, pg *sql.DB, cfg *config.Config) {
+type RunMigrationsParams struct {
+	fx.In
+
+	WriteDB *sql.DB `name:"mysqlMaster"`
+	Cfg     *config.Config
+}
+
+func FirstMigration(p RunMigrationsParams) {
+	cfg := p.Cfg
+
+	_, err := p.WriteDB.Exec(`SELECT 1 FROM identity_providers LIMIT 1`)
+	if err == nil {
+		return
+	}
+
+	// MySQL migrations
+	driverMySql, _ := mysql.WithInstance(p.WriteDB, &mysql.Config{})
+	mMy, err := migrate.NewWithDatabaseInstance(
+		"file://internal/db/migrations/mysql",
+		cfg.MySQLConfig.Database, driverMySql,
+	)
+	if err != nil {
+		panic(err)
+	}
+
+	if err := mMy.Up(); err != nil && err != migrate.ErrNoChange {
+		panic(err)
+	}
+}
+
+func RunMigrations(lc fx.Lifecycle, p RunMigrationsParams) {
 	lc.Append(fx.StartHook(func() error {
+		cfg := p.Cfg
+
 		// MySQL migrations
-		driverMySql, _ := mysql.WithInstance(mysqlDB, &mysql.Config{})
+		driverMySql, _ := mysql.WithInstance(p.WriteDB, &mysql.Config{})
 		mMy, err := migrate.NewWithDatabaseInstance(
 			"file://internal/db/migrations/mysql",
 			cfg.MySQLConfig.Database, driverMySql,

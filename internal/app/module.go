@@ -27,14 +27,24 @@ func New() *fx.App {
 			config.New,    // *config.Config
 			logger.NewZap, // *zap.Logger
 
-			db.NewMySQL, // *sql.DB (MySQL)
+			fx.Annotate(
+				db.NewMySQL, // *sql.DB (MySQL Write)
+				fx.ResultTags(`name:"mysqlMaster"`),
+			),
+			fx.Annotate(
+				db.NewMySQLRead, // *sql.DB (MySQL Read)
+				fx.ResultTags(`name:"mysqlReplica"`),
+			),
 
 			repo.NewIdentityProviderRepository, // IdentiityProviderRepository
 
-			auth.LoadIdentityProviders, // LoadIdentityProviders interface
-			echo.New,                   // *echo.Echo
-			handlers.NewAuthHandler,    // *handlers.AuthHandler
-			handlers.NewIDPHandler,     // *handlers.IDPHandler
+			fx.Annotate(
+				auth.LoadIdentityProviders, // LoadIdentityProviders interface
+				fx.ParamTags(``, `name:"mysqlMaster"`),
+			),
+			echo.New,                // *echo.Echo
+			handlers.NewAuthHandler, // *handlers.AuthHandler
+			handlers.NewIDPHandler,  // *handlers.IDPHandler
 
 			fx.Annotate(
 				middleware.ZapLogger, // func(*zap.Logger) echo.MiddlewareFunc

@@ -15,10 +15,10 @@ func registerRoutes() any {
 			hh *handlers.AuthHandler,
 			jwtMw echo.MiddlewareFunc,
 			idph *handlers.IDPHandler,
-			mysqlDB *sql.DB,
+			mysqlMaster *sql.DB,
 		) {
 			// Health
-			e.GET("/healthz", handlers.Healthz(mysqlDB))
+			e.GET("/healthz", handlers.Healthz(mysqlMaster))
 
 			// Auth SSO
 			e.GET("/:tenantID/:idpType/login", hh.Login)
@@ -40,11 +40,11 @@ func registerRoutes() any {
 			v1.GET("/me", handlers.Me)
 		},
 		fx.ParamTags(
-			``,             // echo
-			``,             // AuthHandler
-			`name:"jwtMw"`, // jwt Middleware
-			``,             // IDPHandler
-			``,             // mysqlDB
+			``,                   // echo
+			``,                   // AuthHandler
+			`name:"jwtMw"`,       // jwt Middleware
+			``,                   // IDPHandler
+			`name:"mysqlMaster"`, // mysqlMaster
 		),
 	)
 }
