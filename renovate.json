@@ -4,7 +4,7 @@
   "labels": ["dependencies", "security"],
   "commitMessagePrefix": "chore: ",
   "lockFileMaintenance": {
-    "enabled": false,
+    "enabled": true,
     "rebaseStalePrs": true,
     "automerge": true
   },
