@@ -53,7 +53,7 @@ linters:
 issues:
   max-issues-per-linter: 0 # ilimitado por linter :contentReference[oaicite:20]{index=20}
   max-same-issues: 0 # ilimitado de mesma issue :contentReference[oaicite:21]{index=21}
-  new: true
+  new-from-rev: HEAD~
 
 output:
   formats:
