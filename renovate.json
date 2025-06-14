@@ -1,28 +1,48 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["config:recommended"],
-  "labels": ["dependencies", "security"],
+  "extends": [
+    "config:recommended"
+  ],
+  "labels": [
+    "dependencies",
+    "security"
+  ],
   "commitMessagePrefix": "chore: ",
   "lockFileMaintenance": {
     "enabled": true,
-    "rebaseStalePrs": true,
+    "rebaseWhen": "behind-base-branch",
     "automerge": true
   },
   "platformAutomerge": true,
-  "schedule": ["before 10pm"],
-  "postUpdateOptions": ["gomodTidy"],
-
+  "schedule": [
+    "before 10pm"
+  ],
+  "postUpdateOptions": [
+    "gomodTidy"
+  ],
   "packageRules": [
     {
       "groupName": "non-major deps",
-      "matchUpdateTypes": ["digest", "pin", "patch", "minor"],
+      "matchUpdateTypes": [
+        "digest",
+        "pin",
+        "patch",
+        "minor"
+      ],
       "automerge": true,
-      "matchFileNames": ["**/go.mod", ".github/**"]
+      "matchFileNames": [
+        "**/go.mod",
+        ".github/**"
+      ]
     },
-
     {
-      "matchDatasources": ["docker"],
-      "matchUpdateTypes": ["patch", "minor"],
+      "matchDatasources": [
+        "docker"
+      ],
+      "matchUpdateTypes": [
+        "patch",
+        "minor"
+      ],
       "pinDigests": true
     }
   ]
