@@ -25,5 +25,5 @@ jobs:
       - name: Lint
         uses: golangci/golangci-lint-action@v8
         with:
-          args: --new-from-rev=HEAD~ --timeout=5m ./...
+          args: --timeout=5m ./...
           only-new-issues: true
