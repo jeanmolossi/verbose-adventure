@@ -1,0 +1,31 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "labels": ["dependencies"],
+  "commitMessagePrefix": "chore: ",
+  "lockFileMaintenance": {
+    "enabled": false,
+    "rebaseStalePrs": true,
+    "automerge": true
+  },
+  "platformAutomerge": true,
+  "schedule": ["at any time"],
+  "postUpdateOptions": ["gomodTidy"],
+
+  "packageRules": [
+    {
+      "groupName": "non-major deps",
+      "matchUpdateTypes": ["digest", "pin", "patch", "minor"],
+      "automerge": true,
+      "matchFileNames": ["**/go.mod", ".github/**"]
+    },
+
+    {
+      "matchDatasources": ["docker"],
+      "matchUpdateTypes": ["patch", "minor"],
+      "pinDigests": true
+    }
+  ],
+  "ignoreDeps": [],
+  "ignorePaths": []
+}
