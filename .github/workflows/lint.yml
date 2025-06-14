@@ -24,7 +24,3 @@ jobs:
 
       - name: Lint
         uses: golangci/golangci-lint-action@main
-        with:
-          skip-cache: true
-          version: latest
-          args: --new --timeout=10m ./...
