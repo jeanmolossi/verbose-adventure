@@ -1,0 +1,62 @@
+# GolangCI-Lint v2 configuration file
+# See https://golangci-lint.run/usage/configuration/ :contentReference[oaicite:3]{index=3}
+
+version: "2"
+
+run:
+  timeout: 5m # tempo máximo de execução do linter :contentReference[oaicite:4]{index=4}
+  tests: true # inclui testes na análise :contentReference[oaicite:5]{index=5}
+
+formatters:
+  enable:
+    - goimports # formatação e organização de imports :contentReference[oaicite:14]{index=14}
+    - gofmt # formatação padrão gofmt :contentReference[oaicite:13]{index=13}
+
+  settings:
+    goimports:
+      local-prefixes:
+        - github.com/jeanmolossi/verbose-adventure # prefixo de imports locais :contentReference[oaicite:19]{index=19}
+
+linters:
+  enable:
+    - errcheck # verifica erros não tratados :contentReference[oaicite:8]{index=8}
+    - staticcheck # análises estáticas avançadas :contentReference[oaicite:10]{index=10}
+    - unused # variáveis não utilizadas :contentReference[oaicite:12]{index=12}
+    - dupl # detecta duplicações de código :contentReference[oaicite:15]{index=15}
+    - gocyclo # mede complexidade ciclomática :contentReference[oaicite:16]{index=16}
+    - ineffassign
+    - govet
+    - canonicalheader
+    - copyloopvar
+    - gosec
+    - importas
+    - lll
+    - misspell
+    - nlreturn
+    - prealloc
+    - spancheck
+    - sqlclosecheck
+    - tagalign
+    - testifylint
+    - thelper
+    - varnamelen
+    - whitespace
+    - wrapcheck
+    - wsl
+
+  settings:
+    gocyclo:
+      min-complexity: 10 # limiar para complexidade :contentReference[oaicite:17]{index=17}
+    dupl:
+      threshold: 75 # tokens duplicados para alertar :contentReference[oaicite:18]{index=18}
+
+issues:
+  max-issues-per-linter: 0 # ilimitado por linter :contentReference[oaicite:20]{index=20}
+  max-same-issues: 0 # ilimitado de mesma issue :contentReference[oaicite:21]{index=21}
+  new: true
+
+output:
+  formats:
+    text:
+      colors: true # saída colorida com número de linhas :contentReference[oaicite:25]{index=25}
+

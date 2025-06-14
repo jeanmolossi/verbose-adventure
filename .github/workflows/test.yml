@@ -1,0 +1,25 @@
+name: Test
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  ubuntu:
+    strategy:
+      matrix:
+        go: ["1.24", "1.23"]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - uses: actions/setup-go@master
+        with:
+          go-version: ${{ matrix.go }}
+
+      - name: Install dependencies
+        run: go mod tidy
+
+      - name: Run tests
+        run: go test -timeout 10m ./...

@@ -1,0 +1,30 @@
+name: Lint
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - uses: actions/setup-go@master
+        with:
+          go-version: "stable"
+          cache: true
+
+      - name: Install dependencies
+        run: go mod tidy
+
+      - name: Lint
+        uses: golangci/golangci-lint-action@master
+        with:
+          skip-cache: true
+          version: latest
+          args: --timeout=10m ./...
