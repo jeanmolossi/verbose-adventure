@@ -23,7 +23,7 @@ jobs:
         run: go mod tidy
 
       - name: Lint
-        uses: golangci/golangci-lint-action@master
+        uses: golangci/golangci-lint-action@main
         with:
           skip-cache: true
           version: latest
