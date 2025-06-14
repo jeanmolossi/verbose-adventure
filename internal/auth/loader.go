@@ -12,9 +12,10 @@ import (
 	"strconv"
 
 	"github.com/coreos/go-oidc"
+	"golang.org/x/oauth2"
+
 	"github.com/jeanmolossi/verbose-adventure/internal/config"
 	"github.com/jeanmolossi/verbose-adventure/internal/db"
-	"golang.org/x/oauth2"
 )
 
 type IdentityProvider interface {
@@ -59,6 +60,7 @@ func LoadIdentityProviders(cfg *config.Config, wrDB *sql.DB) ([]IdentityProvider
 	if err != nil {
 		return nil, err
 	}
+	//nolint:errcheck
 	defer rows.Close()
 
 	providers := make([]IdentityProvider, 0, 2) // pre-alloc 2 providers space
@@ -97,7 +99,6 @@ func LoadIdentityProviders(cfg *config.Config, wrDB *sql.DB) ([]IdentityProvider
 
 			providers = append(providers, p)
 		default:
-			// ignore
 		}
 	}
 
