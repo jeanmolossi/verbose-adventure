@@ -25,5 +25,5 @@ go.work.sum
 .env
 
 # keypairs
-saml.crt
-saml.key
+saml.crt*
+saml.key*
