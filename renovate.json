@@ -1,7 +1,7 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": ["config:recommended"],
-  "labels": ["dependencies"],
+  "labels": ["dependencies", "security"],
   "commitMessagePrefix": "chore: ",
   "lockFileMaintenance": {
     "enabled": false,
@@ -9,7 +9,7 @@
     "automerge": true
   },
   "platformAutomerge": true,
-  "schedule": ["at any time"],
+  "schedule": ["before 10pm"],
   "postUpdateOptions": ["gomodTidy"],
 
   "packageRules": [
@@ -25,7 +25,5 @@
       "matchUpdateTypes": ["patch", "minor"],
       "pinDigests": true
     }
-  ],
-  "ignoreDeps": [],
-  "ignorePaths": []
+  ]
 }
