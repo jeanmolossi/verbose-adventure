@@ -26,3 +26,4 @@ jobs:
         uses: golangci/golangci-lint-action@v8
         with:
           args: --new-from-rev=HEAD~ --timeout=5m ./...
+          only-new-issues: true
