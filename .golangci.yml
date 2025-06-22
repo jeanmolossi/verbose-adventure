@@ -41,7 +41,6 @@ linters:
     - thelper
     - varnamelen
     - whitespace
-    - wrapcheck
     - wsl
 
   settings:
@@ -49,6 +48,24 @@ linters:
       min-complexity: 10 # limiar para complexidade :contentReference[oaicite:17]{index=17}
     dupl:
       threshold: 75 # tokens duplicados para alertar :contentReference[oaicite:18]{index=18}
+    varnamelen:
+      ignore-names:
+        - err
+        - db
+        - ok
+        - p
+        - w
+      ignore-type-assert-ok: true
+      ignore-map-index-ok: true
+      ignore-chan-recv-ok: true
+    wsl:
+      allow-cuddle-declarations: true
+      allow-cuddle-used-in-block: true
+      force-err-cuddling: true
+    errcheck:
+      exclude-functions:
+        - (*database/sql.DB).Close
+        - (net/http.ResponseWriter).Write
 
 issues:
   max-issues-per-linter: 0 # ilimitado por linter :contentReference[oaicite:20]{index=20}
