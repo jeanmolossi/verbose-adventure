@@ -7,8 +7,9 @@ import (
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/mysql"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
-	"github.com/jeanmolossi/verbose-adventure/internal/config"
 	"go.uber.org/fx"
+
+	"github.com/jeanmolossi/verbose-adventure/internal/config"
 )
 
 type RunMigrationsParams struct {
@@ -27,7 +28,11 @@ func FirstMigration(p RunMigrationsParams) {
 	}
 
 	// MySQL migrations
-	driverMySql, _ := mysql.WithInstance(p.WriteDB, &mysql.Config{})
+	driverMySql, err := mysql.WithInstance(p.WriteDB, &mysql.Config{})
+	if err != nil {
+		panic(err)
+	}
+
 	mMy, err := migrate.NewWithDatabaseInstance(
 		"file://internal/db/migrations/mysql",
 		cfg.MySQLConfig.Database, driverMySql,
@@ -47,6 +52,7 @@ func RunMigrations(lc fx.Lifecycle, p RunMigrationsParams) {
 
 		// MySQL migrations
 		driverMySql, _ := mysql.WithInstance(p.WriteDB, &mysql.Config{})
+
 		mMy, err := migrate.NewWithDatabaseInstance(
 			"file://internal/db/migrations/mysql",
 			cfg.MySQLConfig.Database, driverMySql,
