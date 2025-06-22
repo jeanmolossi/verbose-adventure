@@ -15,7 +15,6 @@ import (
 	"golang.org/x/oauth2"
 
 	"github.com/jeanmolossi/verbose-adventure/internal/config"
-	"github.com/jeanmolossi/verbose-adventure/internal/db"
 )
 
 type IdentityProvider interface {
@@ -43,11 +42,6 @@ type idpRecord struct {
 }
 
 func LoadIdentityProviders(cfg *config.Config, wrDB *sql.DB) ([]IdentityProvider, error) {
-	db.FirstMigration(db.RunMigrationsParams{
-		WriteDB: wrDB,
-		Cfg:     cfg,
-	})
-
 	ctx := context.Background()
 
 	query := `
@@ -64,6 +58,7 @@ func LoadIdentityProviders(cfg *config.Config, wrDB *sql.DB) ([]IdentityProvider
 	defer rows.Close()
 
 	providers := make([]IdentityProvider, 0, 2) // pre-alloc 2 providers space
+
 	for rows.Next() {
 		var rec idpRecord
 		if err := rows.Scan(
@@ -136,6 +131,7 @@ func decryptSecret(ciphertext []byte, keyBase64 string) (string, error) {
 	}
 
 	nonce, ct := ciphertext[:nonceSize], ciphertext[nonceSize:]
+
 	plaintext, err := gcm.Open(nil, nonce, ct, nil)
 	if err != nil {
 		return "", err
@@ -159,6 +155,7 @@ func newOIDCProvider(ctx context.Context, rec idpRecord, secret string, cfg *con
 	}
 
 	verifier := provider.Verifier(&oidc.Config{ClientID: rec.ClientID})
+
 	return &oidcProvider{
 		id:       rec.ID,
 		tenantID: rec.TenantID,
@@ -182,6 +179,7 @@ func (o *oidcProvider) AuthURL(state string) string {
 
 func (o *oidcProvider) Callback(ctx context.Context, req *http.Request) (*AuthResult, error) {
 	q := req.URL.Query()
+
 	code := q.Get("code")
 	if code == "" {
 		return nil, errors.New("authorization code not found")

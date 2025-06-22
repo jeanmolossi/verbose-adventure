@@ -12,8 +12,30 @@ import (
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
+
 	"github.com/jeanmolossi/verbose-adventure/internal/config"
 )
+
+func startTestServer(t *testing.T) *httptest.Server {
+	t.Helper()
+
+	var testsrv *httptest.Server
+	//nolint:gosec
+	testsrv = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/.well-known/openid-configuration":
+			w.Header().Set("Content-Type", "application/json")
+			w.Write([]byte(`{"issuer":"` + testsrv.URL + `","jwks_uri":"` + testsrv.URL + `/jwks"}`))
+		case "/jwks":
+			w.Header().Set("Content-Type", "application/json")
+			w.Write([]byte(`{"keys":[]}`))
+		default:
+			w.WriteHeader(http.StatusNotFound)
+		}
+	}))
+
+	return testsrv
+}
 
 func encryptAESGCM(t *testing.T, key []byte, plaintext string) []byte {
 	t.Helper()
@@ -67,9 +89,11 @@ func TestDecryptSecret_InvalidBase64(t *testing.T) {
 func TestDecryptSecret_InvalidKeyLength(t *testing.T) {
 	// valid key length to encrypt
 	rawKey := make([]byte, 32)
+
 	if _, err := rand.Read(rawKey); err != nil {
 		t.Fatalf("failed to randomize key: %v", err)
 	}
+
 	ciphertext := encryptAESGCM(t, rawKey, "x")
 
 	// invalid key length
@@ -79,6 +103,7 @@ func TestDecryptSecret_InvalidKeyLength(t *testing.T) {
 	}
 
 	keyB64 := base64.StdEncoding.EncodeToString(shortKey)
+
 	_, err := decryptSecret(ciphertext, keyB64)
 	if err == nil {
 		t.Error("expected error for invalid key length, got nil")
@@ -94,6 +119,7 @@ func TestDecryptSecret_CipherTooShort(t *testing.T) {
 	keyB64 := base64.StdEncoding.EncodeToString(rawKey)
 
 	short := make([]byte, 0)
+
 	_, err := decryptSecret(short, keyB64)
 	if err == nil {
 		t.Error("expected error for invalid key length, got nil")
@@ -101,20 +127,8 @@ func TestDecryptSecret_CipherTooShort(t *testing.T) {
 }
 
 func TestLoadIdentityProviders_Success(t *testing.T) {
-	var ts *httptest.Server
-	ts = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		switch r.URL.Path {
-		case "/.well-known/openid-configuration":
-			w.Header().Set("Content-Type", "application/json")
-			w.Write([]byte(`{"issuer":"` + ts.URL + `","jwks_uri":"` + ts.URL + `/jwks"}`))
-		case "/jwks":
-			w.Header().Set("Content-Type", "application/json")
-			w.Write([]byte(`{"keys":[]}`))
-		default:
-			w.WriteHeader(http.StatusNotFound)
-		}
-	}))
-	defer ts.Close()
+	testsrv := startTestServer(t)
+	defer testsrv.Close()
 
 	db, mock, err := sqlmock.New()
 	if err != nil {
@@ -127,16 +141,30 @@ func TestLoadIdentityProviders_Success(t *testing.T) {
 	if _, err := rand.Read(rawKey); err != nil {
 		t.Fatalf("failed to randomize key: %v", err)
 	}
+
 	keyB64 := base64.StdEncoding.EncodeToString(rawKey)
-	cfg := &config.Config{EncryptionKey: keyB64, BaseURL: ts.URL}
+	cfg := &config.Config{EncryptionKey: keyB64, BaseURL: testsrv.URL}
 
 	secretPlain := "secret"
 	ciphertext := encryptAESGCM(t, rawKey, secretPlain)
 
-	rows := sqlmock.NewRows([]string{"id", "tenant_id", "type", "metadata_url", "client_id", "client_secret_enc", "enabled"}).
-		AddRow(1, 42, "oidc", ts.URL, "client-id", ciphertext, true)
+	rows := sqlmock.
+		NewRows([]string{"id", "tenant_id", "type", "metadata_url", "client_id", "client_secret_enc", "enabled"}).
+		AddRow(
+			1,           // id
+			42,          // tenant_id
+			"oidc",      // type
+			testsrv.URL, // metadata_url
+			"client-id", // client_id
+			ciphertext,  // client_secret_enc
+			true,        // enabled
+		)
 
-	mock.ExpectQuery("SELECT id, tenant_id, type, metadata_url, client_id, client_secret_enc, enabled FROM identity_providers WHERE enabled = ?").
+	mock.
+		ExpectQuery(
+			`SELECT id, tenant_id, type, metadata_url, client_id, client_secret_enc, enabled ` +
+				`FROM identity_providers WHERE enabled = ?`,
+		).
 		WillReturnRows(rows)
 
 	providers, err := LoadIdentityProviders(cfg, db)
@@ -168,8 +196,20 @@ func TestLoadIdentityProviders_NoRows(t *testing.T) {
 
 	cfg := &config.Config{EncryptionKey: "", BaseURL: ""}
 
-	mock.ExpectQuery("SELECT id, tenant_id, type, metadata_url, client_id, client_secret_enc, enabled FROM identity_providers WHERE enabled = ?").
-		WillReturnRows(sqlmock.NewRows([]string{"id", "tenant_id", "type", "metadata_url", "client_id", "client_secret_enc", "enabled"}))
+	mock.
+		ExpectQuery(
+			`SELECT id, tenant_id, type, metadata_url, client_id, client_secret_enc, enabled ` +
+				`FROM identity_providers WHERE enabled = ?`,
+		).
+		WillReturnRows(sqlmock.NewRows([]string{
+			"id",
+			"tenant_id",
+			"type",
+			"metadata_url",
+			"client_id",
+			"client_secret_enc",
+			"enabled",
+		}))
 
 	providers, err := LoadIdentityProviders(cfg, db)
 	if err != nil {
@@ -188,36 +228,26 @@ func TestOIDCProviderCallback_NoCode(t *testing.T) {
 		t.Fatalf("failed to randomize key: %v", err)
 	}
 
-	var ts *httptest.Server
-	ts = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		switch r.URL.Path {
-		case "/.well-known/openid-configuration":
-			w.Header().Set("Content-Type", "application/json")
-			w.Write([]byte(`{"issuer":"` + ts.URL + `","jwks_uri":"` + ts.URL + `/jwks"}`))
-		case "/jwks":
-			w.Header().Set("Content-Type", "application/json")
-			w.Write([]byte(`{"keys":[]}`))
-		default:
-			w.WriteHeader(http.StatusNotFound)
-		}
-	}))
-	defer ts.Close()
+	testsrv := startTestServer(t)
+	defer testsrv.Close()
 
 	rec := idpRecord{
 		ID:              1,
 		TenantID:        7,
 		ProviderType:    "oidc",
-		MetadataURL:     ts.URL,
+		MetadataURL:     testsrv.URL,
 		ClientID:        "id",
 		ClientSecretEnc: encryptAESGCM(t, rawKey, "secret"),
 		Enabled:         true,
 	}
 
-	cfg := &config.Config{EncryptionKey: base64.StdEncoding.EncodeToString(rawKey), BaseURL: ts.URL}
+	cfg := &config.Config{EncryptionKey: base64.StdEncoding.EncodeToString(rawKey), BaseURL: testsrv.URL}
+
 	pIface, err := newOIDCProvider(context.Background(), rec, "secret", cfg)
 	if err != nil {
 		t.Fatalf("failed to create provider: %v", err)
 	}
+
 	op := pIface.(*oidcProvider)
 
 	req := httptest.NewRequest(http.MethodGet, "/callback", nil)
@@ -232,12 +262,15 @@ func TestOIDCProviderCallback_InvalidCode(t *testing.T) {
 	if _, err := rand.Read(rawKey); err != nil {
 		t.Fatalf("failed to randomize key: %v", err)
 	}
-	var ts *httptest.Server
-	ts = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+	var testsrv *httptest.Server
+	//nolint:gosec
+	testsrv = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case "/.well-known/openid-configuration":
 			w.Header().Set("Content-Type", "application/json")
-			w.Write([]byte(`{"issuer":"` + ts.URL + `","jwks_uri":"` + ts.URL + `/jwks","token_endpoint":"` + ts.URL + `/token"}`))
+			//nolint:lll
+			w.Write([]byte(`{"issuer":"` + testsrv.URL + `","jwks_uri":"` + testsrv.URL + `/jwks","token_endpoint":"` + testsrv.URL + `/token"}`))
 		case "/jwks":
 			w.Header().Set("Content-Type", "application/json")
 			w.Write([]byte(`{"keys":[]}`))
@@ -248,23 +281,25 @@ func TestOIDCProviderCallback_InvalidCode(t *testing.T) {
 			w.WriteHeader(http.StatusNotFound)
 		}
 	}))
-	defer ts.Close()
+	defer testsrv.Close()
 
 	rec := idpRecord{
 		ID:              1,
 		TenantID:        7,
 		ProviderType:    "oidc",
-		MetadataURL:     ts.URL,
+		MetadataURL:     testsrv.URL,
 		ClientID:        "id",
 		ClientSecretEnc: encryptAESGCM(t, rawKey, "secret"),
 		Enabled:         true,
 	}
 
-	cfg := &config.Config{EncryptionKey: base64.StdEncoding.EncodeToString(rawKey), BaseURL: ts.URL}
+	cfg := &config.Config{EncryptionKey: base64.StdEncoding.EncodeToString(rawKey), BaseURL: testsrv.URL}
+
 	pIface, err := newOIDCProvider(context.Background(), rec, "secret", cfg)
 	if err != nil {
 		t.Fatalf("failed to create provider: %v", err)
 	}
+
 	op := pIface.(*oidcProvider)
 
 	req := httptest.NewRequest(http.MethodGet, "/callback?code=foo", nil)
