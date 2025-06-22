@@ -7,14 +7,14 @@ import (
 	"go.uber.org/zap"
 )
 
-func ZapLogger(l *zap.Logger) echo.MiddlewareFunc {
+func ZapLogger(log *zap.Logger) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			start := time.Now()
 			err := next(c)
 			end := time.Since(start)
 
-			l.Info("http request",
+			log.Info("http request",
 				zap.Dict("request",
 					zap.String("method", c.Request().Method),
 					zap.String("path", c.Request().URL.Path),

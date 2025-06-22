@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/coreos/go-oidc"
 	"golang.org/x/oauth2"
@@ -141,7 +142,9 @@ func decryptSecret(ciphertext []byte, keyBase64 string) (string, error) {
 }
 
 func newOIDCProvider(ctx context.Context, rec idpRecord, secret string, cfg *config.Config) (IdentityProvider, error) {
-	provider, err := oidc.NewProvider(ctx, rec.MetadataURL)
+	metadataURL := strings.TrimSuffix(rec.MetadataURL, "/.well-known/openid-configuration")
+
+	provider, err := oidc.NewProvider(ctx, metadataURL)
 	if err != nil {
 		return nil, err
 	}

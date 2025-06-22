@@ -65,7 +65,6 @@ func New() *fx.App {
 		),
 		// 2) Registrations
 		fx.Invoke(
-			db.RunMigrations,
 			registerMiddlewares(),
 			registerRoutes(),
 			startServer,
@@ -84,19 +83,21 @@ func registerMiddlewares() any {
 	)
 }
 
-func startServer(lc fx.Lifecycle, e *echo.Echo, log *zap.Logger) {
+func startServer(lc fx.Lifecycle, eInstance *echo.Echo, log *zap.Logger) {
 	lc.Append(fx.Hook{
 		OnStart: func(ctx context.Context) error {
 			go func() {
-				if err := e.Start(":8081"); err != nil && err != http.ErrServerClosed {
+				if err := eInstance.Start(":8081"); err != nil && err != http.ErrServerClosed {
 					log.Fatal("Echo start failed", zap.Error(err))
 				}
 			}()
+
 			return nil
 		},
 		OnStop: func(ctx context.Context) error {
 			log.Info("Shutting down")
-			return e.Shutdown(ctx)
+
+			return eInstance.Shutdown(ctx)
 		},
 	})
 }

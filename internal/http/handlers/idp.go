@@ -135,6 +135,7 @@ func (h *IDPHandler) Create(c echo.Context) error {
 
 	// decodifica secret
 	rawSecret := []byte(req.ClientSecret)
+
 	secret, err := encryptSecret(rawSecret, h.cfg.EncryptionKey)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "invalid client_secret_enc, must be base64")
@@ -236,17 +237,21 @@ func encryptSecret(plaintext []byte, keyB64 string) ([]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf("can not decode encryption key: %w", err)
 	}
+
 	block, err := aes.NewCipher(key)
 	if err != nil {
 		return nil, err
 	}
+
 	gcm, err := cipher.NewGCM(block)
 	if err != nil {
 		return nil, err
 	}
+
 	nonce := make([]byte, gcm.NonceSize())
 	if _, err := io.ReadFull(rand.Reader, nonce); err != nil {
 		return nil, err
 	}
+
 	return append(nonce, gcm.Seal(nil, nonce, plaintext, nil)...), nil
 }

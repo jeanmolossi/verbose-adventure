@@ -23,6 +23,7 @@ docker-dev: ## Build and run Docker compose for development
 	@docker compose up --build
 
 docker-up: ## Start Docker compose services
+	@docker compose -f docker-compose.mock.yml  up -d # Start IdP
 	@docker compose up -d
 
 docker-down: ## Stop docker compose services
@@ -34,3 +35,10 @@ docker-up-watch: ## Start docker compose services and watch core logs
 
 idp-mock: ## Start and idp mock server using keycloack
 	@docker compose -f docker-compose.mock.yml up
+
+docker-migrate: ## Run migrations
+	@docker exec api go run cmd/setup/main.go
+
+secret=""
+docker-secret: ## Prints the encoded secret to insert on identity_providers: (docker-secret secret=<client-secret>)
+	@docker exec api go run cmd/secret/main.go -secret=${secret}
