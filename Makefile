@@ -36,8 +36,9 @@ docker-up-watch: ## Start docker compose services and watch core logs
 idp-mock: ## Start and idp mock server using keycloack
 	@docker compose -f docker-compose.mock.yml up
 
+rollback="false"
 docker-migrate: ## Run migrations
-	@docker exec api go run cmd/setup/main.go
+	@docker exec api go run cmd/setup/main.go -rollback=${rollback}
 
 secret=""
 docker-secret: ## Prints the encoded secret to insert on identity_providers: (docker-secret secret=<client-secret>)
