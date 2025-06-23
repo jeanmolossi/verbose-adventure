@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"log"
 
 	"github.com/jeanmolossi/verbose-adventure/internal/config"
@@ -9,13 +10,19 @@ import (
 	"github.com/jeanmolossi/verbose-adventure/internal/db"
 )
 
+var rollback bool
+
 func main() {
+	flag.BoolVar(&rollback, "rollback", false, "-rollback")
+
+	flag.Parse()
+
 	corecfg, err := coreconfig.New()
 	if err != nil {
 		panic(err)
 	}
 
-	err = coredb.RunMigrationsVanilla(corecfg)
+	err = coredb.RunMigrationsVanilla(corecfg, rollback)
 	if err != nil {
 		panic(err)
 	}
@@ -27,7 +34,7 @@ func main() {
 
 	mysql := db.NewMySQL(cfg)
 
-	err = db.RunMigrationsVanilla(cfg, mysql)
+	err = db.RunMigrationsVanilla(cfg, mysql, rollback)
 	if err != nil {
 		panic(err)
 	}

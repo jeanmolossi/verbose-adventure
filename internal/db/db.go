@@ -1,3 +1,4 @@
+// Package db is a package to manage database instructions
 package db
 
 import (
@@ -5,8 +6,9 @@ import (
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/jeanmolossi/verbose-adventure/internal/config"
 	_ "github.com/lib/pq"
+
+	"github.com/jeanmolossi/verbose-adventure/internal/config"
 )
 
 // newMySQL retorna uma conexão configurada para MySQL.

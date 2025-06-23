@@ -6,6 +6,7 @@ import (
 
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/jackc/pgx/v5/stdlib"
 	"go.uber.org/fx"
 
@@ -18,7 +19,7 @@ type RunMigrationsParams struct {
 	Cfg *config.Config
 }
 
-func runMigrations(cfg *config.Config) error {
+func runMigrations(cfg *config.Config, isRollback bool) error {
 	pgPool := NewPostgreSQLMaster(cfg)
 
 	conn, _ := pgPool.Acquire(context.Background())
@@ -39,8 +40,14 @@ func runMigrations(cfg *config.Config) error {
 		return err
 	}
 
-	if err := migrations.Up(); err != nil && !errors.Is(err, migrate.ErrNoChange) {
-		return err
+	if isRollback {
+		if err := migrations.Down(); err != nil && !errors.Is(err, migrate.ErrNoChange) {
+			return err
+		}
+	} else {
+		if err := migrations.Up(); err != nil && !errors.Is(err, migrate.ErrNoChange) {
+			return err
+		}
 	}
 
 	return nil
@@ -48,10 +55,10 @@ func runMigrations(cfg *config.Config) error {
 
 func RunMigrations(lc fx.Lifecycle, p RunMigrationsParams) {
 	lc.Append(fx.StartHook(func(c context.Context) error {
-		return runMigrations(p.Cfg)
+		return runMigrations(p.Cfg, false)
 	}))
 }
 
-func RunMigrationsVanilla(cfg *config.Config) error {
-	return runMigrations(cfg)
+func RunMigrationsVanilla(cfg *config.Config, isRollback bool) error {
+	return runMigrations(cfg, isRollback)
 }
