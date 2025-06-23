@@ -1,24 +1,36 @@
 package main
 
 import (
-	"github.com/jeanmolossi/verbose-adventure/internal/config"
-	"github.com/jeanmolossi/verbose-adventure/internal/db"
+	"log"
 
-	"go.uber.org/fx"
+	"github.com/jeanmolossi/verbose-adventure/internal/config"
+	coreconfig "github.com/jeanmolossi/verbose-adventure/internal/core/config"
+	coredb "github.com/jeanmolossi/verbose-adventure/internal/core/metadata/db"
+	"github.com/jeanmolossi/verbose-adventure/internal/db"
 )
 
 func main() {
-	fx.New(
-		fx.Provide(
-			config.New, // *config.Config
+	corecfg, err := coreconfig.New()
+	if err != nil {
+		panic(err)
+	}
 
-			fx.Annotate(
-				db.NewMySQL, // *sql.DB (MySQL Write)
-				fx.ResultTags(`name:"mysqlMaster"`),
-			),
-		),
-		fx.Invoke(
-			db.RunMigrations,
-		),
-	)
+	err = coredb.RunMigrationsVanilla(corecfg)
+	if err != nil {
+		panic(err)
+	}
+
+	cfg, err := config.New()
+	if err != nil {
+		panic(err)
+	}
+
+	mysql := db.NewMySQL(cfg)
+
+	err = db.RunMigrationsVanilla(cfg, mysql)
+	if err != nil {
+		panic(err)
+	}
+
+	log.Println("Migrations done!")
 }

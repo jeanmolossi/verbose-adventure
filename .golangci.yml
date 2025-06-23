@@ -68,6 +68,10 @@ linters:
       exclude-functions:
         - (*database/sql.DB).Close
         - (net/http.ResponseWriter).Write
+    tagalign:
+      sort: false
+    nlreturn:
+      block-size: 3
 
 issues:
   max-issues-per-linter: 0 # ilimitado por linter :contentReference[oaicite:20]{index=20}
