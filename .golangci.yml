@@ -1,29 +1,29 @@
 # GolangCI-Lint v2 configuration file
-# See https://golangci-lint.run/usage/configuration/ :contentReference[oaicite:3]{index=3}
+# See https://golangci-lint.run/usage/configuration/
 
 version: "2"
 
 run:
-  timeout: 5m # tempo máximo de execução do linter :contentReference[oaicite:4]{index=4}
-  tests: true # inclui testes na análise :contentReference[oaicite:5]{index=5}
+  timeout: 5m # tempo máximo de execução do linter
+  tests: true # inclui testes na análise
 
 formatters:
   enable:
-    - goimports # formatação e organização de imports :contentReference[oaicite:14]{index=14}
-    - gofmt # formatação padrão gofmt :contentReference[oaicite:13]{index=13}
+    - goimports # formatação e organização de imports
+    - gofmt # formatação padrão gofmt
 
   settings:
     goimports:
       local-prefixes:
-        - github.com/jeanmolossi/verbose-adventure # prefixo de imports locais :contentReference[oaicite:19]{index=19}
+        - github.com/jeanmolossi/verbose-adventure # prefixo de imports locais
 
 linters:
   enable:
-    - errcheck # verifica erros não tratados :contentReference[oaicite:8]{index=8}
-    - staticcheck # análises estáticas avançadas :contentReference[oaicite:10]{index=10}
-    - unused # variáveis não utilizadas :contentReference[oaicite:12]{index=12}
-    - dupl # detecta duplicações de código :contentReference[oaicite:15]{index=15}
-    - gocyclo # mede complexidade ciclomática :contentReference[oaicite:16]{index=16}
+    - errcheck # verifica erros não tratados
+    - staticcheck # análises estáticas avançadas
+    - unused # variáveis não utilizadas
+    - dupl # detecta duplicações de código
+    - gocyclo # mede complexidade ciclomática
     - ineffassign
     - govet
     - canonicalheader
@@ -45,9 +45,9 @@ linters:
 
   settings:
     gocyclo:
-      min-complexity: 10 # limiar para complexidade :contentReference[oaicite:17]{index=17}
+      min-complexity: 10 # limiar para complexidade
     dupl:
-      threshold: 75 # tokens duplicados para alertar :contentReference[oaicite:18]{index=18}
+      threshold: 75 # tokens duplicados para alertar
     varnamelen:
       ignore-names:
         - err
@@ -74,11 +74,11 @@ linters:
       block-size: 3
 
 issues:
-  max-issues-per-linter: 0 # ilimitado por linter :contentReference[oaicite:20]{index=20}
-  max-same-issues: 0 # ilimitado de mesma issue :contentReference[oaicite:21]{index=21}
+  max-issues-per-linter: 0 # ilimitado por linter
+  max-same-issues: 0 # ilimitado de mesma issue
 
 output:
   formats:
     text:
-      colors: true # saída colorida com número de linhas :contentReference[oaicite:25]{index=25}
+      colors: true # saída colorida com número de linhas
 
