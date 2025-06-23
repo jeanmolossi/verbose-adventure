@@ -3,9 +3,6 @@ package db
 import (
 	"context"
 	"errors"
-
-	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type tenantIDKey struct{}
@@ -23,21 +20,4 @@ func TenantIDFromCtx(ctx context.Context) (int, error) {
 	}
 
 	return id, nil
-}
-
-func setTenant(pool *pgxpool.Config) {
-	WithSetLocal(func(ctx context.Context, c *pgx.Conn) bool {
-		tenantID, err := TenantIDFromCtx(ctx)
-		if err != nil {
-			return false
-		}
-
-		// sets the RLS var into transaction scope
-		if _, err := c.Exec(ctx,
-			"SET LOCAL app.current_tenant = $1", tenantID); err != nil {
-			return false
-		}
-
-		return true
-	})(pool)
 }
