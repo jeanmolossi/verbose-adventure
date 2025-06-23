@@ -8,12 +8,12 @@ import (
 )
 
 type MySQLConfig struct {
-	Database  string `envconfig:"MYSQL_DATABASE" default:"crmcore"`
-	User      string `envconfig:"MYSQL_USER" required:"true"`
-	Password  string `envconfig:"MYSQL_PASS" required:"true"`
-	Port      string `envconfig:"MYSQL_PORT" default:"3306"`
+	Database  string `envconfig:"MYSQL_DATABASE"   default:"crmcore"`
+	User      string `envconfig:"MYSQL_USER"       required:"true"`
+	Password  string `envconfig:"MYSQL_PASS"       required:"true"`
+	Port      string `envconfig:"MYSQL_PORT"       default:"3306"`
 	WriteHost string `envconfig:"MYSQL_WRITE_HOST" required:"true"`
-	ReadHost  string `envconfig:"MYSQL_READ_HOST" required:"true"`
+	ReadHost  string `envconfig:"MYSQL_READ_HOST"  required:"true"`
 }
 
 func (c MySQLConfig) dsn(host string) string {
@@ -35,12 +35,12 @@ func (c MySQLConfig) ReadDSN() string {
 }
 
 type PGConfig struct {
-	Database  string `envconfig:"POSTGRES_DATABASE" default:"crmcore"`
-	User      string `envconfig:"POSTGRES_USER" required:"true"`
-	Password  string `envconfig:"POSTGRES_PASSWORD" required:"true"`
-	Port      string `envconfig:"POSTGRES_PORT" default:"5432"`
+	Database  string `envconfig:"POSTGRES_DATABASE"   default:"crmcore"`
+	User      string `envconfig:"POSTGRES_USER"       required:"true"`
+	Password  string `envconfig:"POSTGRES_PASSWORD"   required:"true"`
+	Port      string `envconfig:"POSTGRES_PORT"       default:"5432"`
 	WriteHost string `envconfig:"POSTGRES_WRITE_HOST" required:"true"`
-	ReadHost  string `envconfig:"POSTGRES_READ_HOST" required:"true"`
+	ReadHost  string `envconfig:"POSTGRES_READ_HOST"  required:"true"`
 }
 
 func (c PGConfig) dsn(host string) string {
@@ -66,11 +66,11 @@ type Config struct {
 	PGConfig    PGConfig
 	LogLevel    string `envconfig:"LOG_LEVEL" default:"info"`
 
-	BaseURL       string `envconfig:"BASE_URL" default:"localhost:8080"`
+	BaseURL       string `envconfig:"BASE_URL"       required:"false" default:"localhost:8080"`
 	EncryptionKey string `envconfig:"ENCRYPTION_KEY" required:"true"`
-	JWTSecret     string `envconfig:"JWT_SECRET" required:"true"`
+	JWTSecret     string `envconfig:"JWT_SECRET"     required:"true"`
 
-	SAMLKeyPath  string `envconfig:"SAML_KEY_PATH" required:"true"`
+	SAMLKeyPath  string `envconfig:"SAML_KEY_PATH"  required:"true"`
 	SAMLCertPath string `envconfig:"SAML_CERT_PATH" required:"true"`
 }
 

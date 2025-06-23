@@ -46,39 +46,45 @@ func FirstMigration(p RunMigrationsParams) {
 	}
 }
 
+func runMigrations(cfg *config.Config, writeDB *sql.DB) error {
+	// MySQL migrations
+	driverMySql, _ := mysql.WithInstance(writeDB, &mysql.Config{})
+
+	mMy, err := migrate.NewWithDatabaseInstance(
+		"file://internal/db/migrations/mysql",
+		cfg.MySQLConfig.Database, driverMySql,
+	)
+	if err != nil {
+		return err
+	}
+
+	if err := mMy.Up(); err != nil && err != migrate.ErrNoChange {
+		return fmt.Errorf("mysql migrate: %w", err)
+	}
+
+	// PostgreSQL migrations
+	// driverPg, _ := postgres.WithInstance(pg, &postgres.Config{})
+	// mPg, err := migrate.NewWithDatabaseInstance(
+	// 	"file://internal/db/migrations/postgres",
+	// 	cfg.PGConfig.Database, driverPg,
+	// )
+	// if err != nil {
+	// 	return err
+	// }
+	//
+	// if err := mPg.Up(); err != nil && err != migrate.ErrNoChange {
+	// 	return fmt.Errorf("postgres migrate: %w", err)
+	// }
+
+	return nil
+}
+
 func RunMigrations(lc fx.Lifecycle, p RunMigrationsParams) {
 	lc.Append(fx.StartHook(func() error {
-		cfg := p.Cfg
-
-		// MySQL migrations
-		driverMySql, _ := mysql.WithInstance(p.WriteDB, &mysql.Config{})
-
-		mMy, err := migrate.NewWithDatabaseInstance(
-			"file://internal/db/migrations/mysql",
-			cfg.MySQLConfig.Database, driverMySql,
-		)
-		if err != nil {
-			return err
-		}
-
-		if err := mMy.Up(); err != nil && err != migrate.ErrNoChange {
-			return fmt.Errorf("mysql migrate: %w", err)
-		}
-
-		// PostgreSQL migrations
-		// driverPg, _ := postgres.WithInstance(pg, &postgres.Config{})
-		// mPg, err := migrate.NewWithDatabaseInstance(
-		// 	"file://internal/db/migrations/postgres",
-		// 	cfg.PGConfig.Database, driverPg,
-		// )
-		// if err != nil {
-		// 	return err
-		// }
-		//
-		// if err := mPg.Up(); err != nil && err != migrate.ErrNoChange {
-		// 	return fmt.Errorf("postgres migrate: %w", err)
-		// }
-
-		return nil
+		return runMigrations(p.Cfg, p.WriteDB)
 	}))
+}
+
+func RunMigrationsVanilla(cfg *config.Config, writeDB *sql.DB) error {
+	return runMigrations(cfg, writeDB)
 }
